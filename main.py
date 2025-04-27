@@ -13,13 +13,19 @@ class Game:
         pygame.init()
 
         self.assets = Assets()
+        self.sprites = self.assets.sprites
+
         self.player = Player()
+        self.grid = self.player.grid
+        self.grid_width = self.player.grid_width
+        self.grid_height = self.player.grid_height
+
         self.SCREEN_WIDTH = 640
         self.SCREEN_HEIGHT = 360
-        self.SCREEN_WIDTH = pygame.display.Info().current_w
-        self.SCREEN_HEIGHT = pygame.display.Info().current_h
+        # self.SCREEN_WIDTH = pygame.display.Info().current_w
+        # self.SCREEN_HEIGHT = pygame.display.Info().current_h
         self.screen = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT), pygame.SCALED)
-        pygame.display.toggle_fullscreen()
+        # pygame.display.toggle_fullscreen()
         self.clock = pygame.time.Clock()
         self.run = True
         pass
@@ -29,7 +35,20 @@ class Game:
             self.clock.tick(30)            
             self.key = pygame.key.get_just_pressed()
             self.screen.fill((255,255,255))
-            # self.player.main()
+            self.player.main()
+
+            for i in range (0, self.grid_height):
+                for n in range (0, self.grid_width):
+                    position = i*self.grid_width+n
+
+                    cell_val = self.grid[position]
+                    if cell_val == 0 or cell_val == "":
+                        img = "cell_uncovered"
+                    elif cell_val == "mine":
+                        img = "cell_mine"
+                    else:
+                        img = "cell_" + str(cell_val)
+                    self.screen.blit(self.sprites[img], (i*15, n*15))
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
