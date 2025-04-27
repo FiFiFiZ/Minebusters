@@ -8,13 +8,16 @@ class Player(pygame.sprite.Sprite):
         super().__init__(*groups)
         self.assets = Assets()
         self.grid = []
+        self.uncovered = []
         self.grid_width = 8
         self.grid_height = 8
-        self.mine_n = 6
+        self.mine_n = 12
+        self.spared_initial_cell = 0
 
         # make an empty grid
         for i in range (0, self.grid_width*self.grid_height):
             self.grid.append("")
+            self.uncovered.append(0)
         # print(len(self.grid))
 
         # add mines to the grid randomly
@@ -22,10 +25,10 @@ class Player(pygame.sprite.Sprite):
         for i in range (self.mine_n):
             # add mine position and make sure to not repeat positions
             new_mine_position = randint(0, self.grid_width*self.grid_height-1)
-            while new_mine_position in mine_pos:
+            while new_mine_position in mine_pos or new_mine_position == self.spared_initial_cell:
                 new_mine_position = (new_mine_position + 1) % len(self.grid)
             mine_pos.append(new_mine_position)
-            self.grid[mine_pos[i]] = "mine" # ITS SOMETIMES IndexError: list assignment index out of range
+            self.grid[mine_pos[i]] = "mine"
 
         # assign numbers to cells (only check cells that are around a mine, and don't check cells more than once)
         checked_cells = []
