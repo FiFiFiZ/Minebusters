@@ -72,8 +72,16 @@ class Game:
                             img = "cell_hidden_clicked"
                             self.uncovered[position] = 1
                         else:
+                            if check_mouse == "mark":
+                                if self.uncovered[position] == "marked":
+                                    self.uncovered[position] == "0"
+                                elif self.uncovered[position] == "0":
+                                    self.uncovered == "marked"
+                                
                             if check_mouse == "clicking":
                                 img = "cell_hidden_clicked"
+                            elif self.uncovered[position] == "marked":
+                                img = "cell_marked"
                             else:
                                 img = "cell_hidden"
 

@@ -12,7 +12,7 @@ class Player(pygame.sprite.Sprite):
         self.grid_width = 8
         self.grid_height = 8
         self.mine_n = 12
-        self.spared_initial_cell = 0
+        self.spared_initial_cells = [4, 9, 25] # positions of spared initial cells
 
         # make an empty grid
         for i in range (0, self.grid_width*self.grid_height):
@@ -25,7 +25,7 @@ class Player(pygame.sprite.Sprite):
         for i in range (self.mine_n):
             # add mine position and make sure to not repeat positions
             new_mine_position = randint(0, self.grid_width*self.grid_height-1)
-            while new_mine_position in mine_pos or new_mine_position == self.spared_initial_cell:
+            while new_mine_position in mine_pos or new_mine_position in self.spared_initial_cells:
                 new_mine_position = (new_mine_position + 1) % len(self.grid)
             mine_pos.append(new_mine_position)
             self.grid[mine_pos[i]] = "mine"
