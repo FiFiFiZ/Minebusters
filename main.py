@@ -16,12 +16,17 @@ class Game:
         self.sprites = self.assets.sprites
 
         self.player = Player()
-        self.SCREEN_WIDTH = 640
-        self.SCREEN_HEIGHT = 240
-        # self.SCREEN_WIDTH = pygame.display.Info().current_w
-        # self.SCREEN_HEIGHT = pygame.display.Info().current_h
-        self.screen = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT), pygame.SCALED)
-        # pygame.display.toggle_fullscreen()
+
+        self.grid_width = 8
+        self.grid_height = 8
+        self.mine_n = 15
+
+        self.SCREEN_WIDTH = self.grid_width*15
+        self.SCREEN_HEIGHT = self.grid_height*15
+        self.SCREEN_WIDTH = pygame.display.Info().current_w
+        self.SCREEN_HEIGHT = pygame.display.Info().current_h
+        self.screen = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
+        pygame.display.toggle_fullscreen()
         self.clock = pygame.time.Clock()
         self.run = True
         self.make_grid(0)
@@ -32,8 +37,6 @@ class Game:
         if call == 0:
             self.grid = []
             self.uncovered = []
-            self.grid_width = 8
-            self.grid_height = 8
             for i in range (0, self.grid_width*self.grid_height):
                 self.grid.append("")
                 self.uncovered.append(0)
@@ -41,9 +44,6 @@ class Game:
         else:
             self.grid = []
             self.uncovered = []
-            self.grid_width = 8
-            self.grid_height = 8
-            self.mine_n = 12
 
             # make an empty grid
             for i in range (0, self.grid_width*self.grid_height):
@@ -90,14 +90,15 @@ class Game:
                 self.uncover_blanks_in_vicinity(item)
 
 
-    def uncover_blanks_in_vicinity(self, n):
+    def uncover_blanks_in_vicinity(self, n, condition=None):
         positions_to_uncover = self.assign_numbers(n)
         for item in positions_to_uncover:
             if self.grid[item] != "mine" and item not in self.uncovered_already:
-                self.uncovered[item] = 1
-                self.uncovered_already.append(item)
-                if self.grid[item] == "":
-                    self.uncover_blanks_in_vicinity(item)
+                if condition == None or (condition == "only_check_for_blanks" and self.grid[item] == ""):
+                    self.uncovered[item] = 1
+                    self.uncovered_already.append(item)
+                    if self.grid[item] == "":
+                        self.uncover_blanks_in_vicinity(item)
 
 
     def check_mines_around_cell(self, n, positions_to_check):
@@ -132,6 +133,10 @@ class Game:
 
 
     def check_mouse(self, x, y, xw, yw):
+        x = round(x)
+        xw = round(xw)
+        y = round(y)
+        yw = round(yw)
         if self.mouse_pos[0] in range (x, x+xw) and self.mouse_pos[1] in range (y, y+yw):
             if self.mouse_jr[0] == True: # uncover
                 return ("clicked")
@@ -154,14 +159,20 @@ class Game:
 
             self.screen.fill((255,255,255))
             self.player.main()
+            cell_sprite_size = 3
+            cell_size_in_pixels = int(round(16*cell_sprite_size))
 
+            grid_xoffs = (self.SCREEN_WIDTH-self.grid_width*cell_size_in_pixels)/2
+            grid_yoffs = (self.SCREEN_HEIGHT-self.grid_height*cell_size_in_pixels)/2
 
             for i in range (0, self.grid_height):
                 for n in range (0, self.grid_width):
                     position = i*self.grid_width+n
 
-                    x = i*15
-                    y = n*15
+                    x = grid_xoffs
+                    y = grid_yoffs
+                    x += i*cell_size_in_pixels
+                    y += n*cell_size_in_pixels
 
                     if self.uncovered[position] == 1:
                         cell_val = self.grid[position]
@@ -172,7 +183,7 @@ class Game:
                         else:
                             img = "cell_" + str(cell_val)
                     else:
-                        check_mouse = self.check_mouse(x, y, 15, 15)
+                        check_mouse = self.check_mouse(x, y, cell_size_in_pixels, cell_size_in_pixels)
                         if check_mouse == "clicked":
                             img = "cell_hidden_clicked"
                             self.uncovered[position] = 1
@@ -184,6 +195,8 @@ class Game:
                             else:
                                 if self.grid[position] == "":
                                     self.uncover_blanks_in_vicinity(position)
+                                elif self.grid[position] != "mine":
+                                    self.uncover_blanks_in_vicinity(position, "only_check_for_blanks")
                         else:
                             if check_mouse == "mark":
                                 print(self.uncovered[position])
@@ -200,8 +213,8 @@ class Game:
                                 img = "cell_hidden"
 
 
-                    self.screen.blit(self.sprites[img], (x, y))
-                    check_mouse = self.check_mouse(x, y, 15, 15)
+                    self.screen.blit(pygame.transform.scale_by(self.sprites[img], cell_sprite_size), (x, y))
+                    check_mouse = self.check_mouse(x, y, cell_size_in_pixels, cell_size_in_pixels)
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
