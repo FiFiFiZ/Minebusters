@@ -17,8 +17,8 @@ class Game:
 
         self.player = Player()
 
-        self.grid_width = 8
-        self.grid_height = 8
+        self.grid_width = 12
+        self.grid_height = 12
         self.mine_n = 15
 
         self.SCREEN_WIDTH = self.grid_width*15
@@ -32,6 +32,7 @@ class Game:
         self.make_grid(0)
         self.initialized_game = 0
         self.quit = 0
+        self.fps_cap = pygame.display.get_current_refresh_rate()
 
     def make_grid(self, call):
         if call == 0:
@@ -64,6 +65,7 @@ class Game:
                     new_mine_position = (new_mine_position + 1) % len(self.grid)
                 mine_pos.append(new_mine_position)
                 self.grid[mine_pos[i]] = "mine"
+            self.mine_pos = mine_pos
 
             # assign numbers to cells (only check cells that are around a mine, and don't check cells more than once)
             checked_cells = []
@@ -150,7 +152,7 @@ class Game:
             if self.quit == 1:
                 self.make_grid(1)
                 self.quit = 0
-            self.clock.tick(30)            
+            self.clock.tick(self.fps_cap)            
             self.key = pygame.key.get_just_pressed()
             self.mouse_jr = pygame.mouse.get_just_released()
             self.mouse_c = pygame.mouse.get_pressed()
@@ -159,7 +161,7 @@ class Game:
 
             self.screen.fill((255,255,255))
             self.player.main()
-            cell_sprite_size = 3
+            cell_sprite_size = 4
             cell_size_in_pixels = int(round(16*cell_sprite_size))
 
             grid_xoffs = (self.SCREEN_WIDTH-self.grid_width*cell_size_in_pixels)/2
@@ -197,6 +199,11 @@ class Game:
                                     self.uncover_blanks_in_vicinity(position)
                                 elif self.grid[position] != "mine":
                                     self.uncover_blanks_in_vicinity(position, "only_check_for_blanks")
+                                else:
+                                    # if mine clicked, uncover every mine
+                                    for mine in self.mine_pos:
+                                        print(self.mine_pos, mine)
+                                        self.uncovered[mine] = 1
                         else:
                             if check_mouse == "mark":
                                 print(self.uncovered[position])
