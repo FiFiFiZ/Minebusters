@@ -1,2 +1,2 @@
-# Minesweepsters
-A minesweeper game where you direct your citizens find mines!
+# Minesweeper
+A Pygame-based minesweeper with new features!
