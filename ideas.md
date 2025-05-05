@@ -7,6 +7,7 @@ minesweeper but:
 - a special event could happen if the chess ai falls into a mine, or if two citizens meet on the same spot
 - enemy ai could be used to the player's advantage: with strategizing, they can make enemy ai fall into mines and discover mine placements (or get whatever special event happens)
 - some pieces of yours could uncover cells that are maybe 2 steps away from them as a special thing or a character property, at the cost of something else like maybe mobility, then you'd have to use different characters in different places and ways
+- meeting together makes combining the maps possible into a bigger map, expands the map of both players (citizens), some pawns (citizens) will have isolated maps from the rest for lack of communication and you have to work with that to understand what could be the length and width of the map, where everyone could be, the risks you could try to take,...
 
 minebusters
 chessSweeper

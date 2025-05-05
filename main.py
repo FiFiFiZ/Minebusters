@@ -15,11 +15,19 @@ class Game:
         self.assets = Assets()
         self.sprites = self.assets.sprites
 
-        self.player = Player()
 
-        self.grid_width = 12
-        self.grid_height = 12
-        self.mine_n = 15
+        self.players = [
+            ["main", ""],
+            ["pawn", "position"]
+        ] # add special attributes if needed
+        self.player = []
+        self.spawn_all_players()
+        
+        self.uncovered = self.player[0].uncovered
+        self.grid = self.player[0].grid
+        self.grid_width = self.player[0].grid_width
+        self.grid_height = self.player[0].grid_height
+        self.mine_pos = self.player[0].mine_pos
 
         self.SCREEN_WIDTH = self.grid_width*15
         self.SCREEN_HEIGHT = self.grid_height*15
@@ -29,109 +37,19 @@ class Game:
         pygame.display.toggle_fullscreen()
         self.clock = pygame.time.Clock()
         self.run = True
-        self.make_grid(0)
+        # self.make_grid(0)
         self.initialized_game = 0
         self.quit = 0
         self.fps_cap = pygame.display.get_current_refresh_rate()
+        # player attributes (this is a manually-set list, will be turned into a method of its own)
 
-    def make_grid(self, call):
-        if call == 0:
-            self.grid = []
-            self.uncovered = []
-            for i in range (0, self.grid_width*self.grid_height):
-                self.grid.append("")
-                self.uncovered.append(0)
-
-        else:
-            self.grid = []
-            self.uncovered = []
-
-            # make an empty grid
-            for i in range (0, self.grid_width*self.grid_height):
-                self.grid.append("")
-                self.uncovered.append(0)
-            
-            for item in self.spared_initial_cells:
-                self.uncovered[item] = 1
-
-
-            # add mines to the grid randomly
-            mine_pos = []
-            for i in range (self.mine_n):
-                # add mine position and make sure to not repeat positions
-                new_mine_position = randint(0, self.grid_width*self.grid_height-1)
-                while new_mine_position in mine_pos or new_mine_position in self.spared_initial_cells:
-                    new_mine_position = (new_mine_position + 1) % len(self.grid)
-                mine_pos.append(new_mine_position)
-                self.grid[mine_pos[i]] = "mine"
-            self.mine_pos = mine_pos
-
-            # assign numbers to cells (only check cells that are around a mine, and don't check cells more than once)
-            checked_cells = []
-
-            # for every mine in the grid
-            for i in range (self.mine_n):
-                # get the positions around the mine
-                check_positions_around_mine = self.assign_numbers(mine_pos[i])
-                # for every position around the mine
-                for items in check_positions_around_mine:
-                    # if that cell wasn't already checked
-                    if items not in checked_cells and self.grid[items] != "mine":
-                        # get list of positions around cell
-                        check_positions_around_cell = self.assign_numbers(items)
-                        # check mines at every position, assign number to cell
-                        self.grid[items] = self.check_mines_around_cell(items, check_positions_around_cell)
-                        # register that the cell has been checked
-                        checked_cells.append(items)
-
-            # uncover initial blanks
-            self.uncovered_already = []
-
-            for item in self.spared_initial_cells:
-                self.uncover_blanks_in_vicinity(item)
-
-
-    def uncover_blanks_in_vicinity(self, n, condition=None):
-        positions_to_uncover = self.assign_numbers(n)
-        for item in positions_to_uncover:
-            if self.grid[item] != "mine" and item not in self.uncovered_already:
-                if condition == None or (condition == "only_check_for_blanks" and self.grid[item] == ""):
-                    self.uncovered[item] = 1
-                    self.uncovered_already.append(item)
-                    if self.grid[item] == "":
-                        self.uncover_blanks_in_vicinity(item)
-
-
-    def check_mines_around_cell(self, n, positions_to_check):
-        number = 0
-        for items in positions_to_check:
-            if self.grid[items] == "mine":
-                number += 1
-        return number
-
-    def assign_numbers(self, n):
+    def spawn_all_players(self):
+        # for item in self.players:
+        #     if item[1] == "position":
+        #         item = 
         
-        w = self.grid_width
-        positions_to_check = []
-        pos_list = [n-w-1, n-w, n-w+1, n-1, n+1, n+w-1, n+w, n+w+1]
-        cell_line = floor(n/self.grid_width)
-        line_list = [cell_line-1, cell_line-1, cell_line-1, cell_line, cell_line, cell_line+1, cell_line+1, cell_line+1]
-        # only include positions that aren't out of the grid (and that are the intended ones)
-        idx = -1
-        for items in pos_list:
-            idx += 1
-            try:
-                position = self.grid[items]
-            except:
-                pass
-            else:
-                # check whether it's on the intended line, if so add it to the list of positions to check around the cell
-                if items >= 0:
-                    if floor(items/self.grid_width) == line_list[idx]:
-                        positions_to_check.append(items)
-                
-        return positions_to_check
-
+        for item in self.players:
+            self.player.append(Player(item))
 
     def check_mouse(self, x, y, xw, yw):
         x = round(x)
@@ -146,12 +64,97 @@ class Game:
             elif self.mouse_c[0] == True: # clicking
                 return ("clicking") # clicking
 
-    def run_grid(self):
+    def run_grid_attributes(self, attributes):
+            self.grid = attributes[1]
+            self.uncovered = attributes[3]
+            self.run_grid(attributes)
+            attributes_to_return = self.grid, self.uncovered
+            return attributes_to_return
+            # make something here that allows for extracting a grid from the big grid to render only what the citizens see, maybe à partir de
+
+    def rg__cell_covered_clicked(self, attributes):
+        position = attributes[0]
+
+        img = "cell_hidden_clicked"
+        self.uncovered[position] = 1
+        # if this is the first uncovering:
+        if self.initialized_game == 0:
+            self.initialized_game = 1
+            self.spared_initial_cells = [position]
+            self.quit = 1
+        # if this is not the first uncovering
+        else:
+            if self.grid[position] == "":
+                self.uncover_blanks_in_vicinity(position)
+            elif self.grid[position] != "mine":
+                self.uncover_blanks_in_vicinity(position, "only_check_for_blanks")
+            else:
+                # if mine clicked, uncover every mine
+                for mine in self.mine_pos:
+                    self.uncovered[mine] = 1
+                    
+        return img
+
+    def rg__cell_uncovered(self, attributes):
+        position = attributes[0]
+        x = attributes[1]
+        y = attributes[2]
+        cell_size_in_pixels = attributes[3]
+
+        # assign image based on cell value
+        cell_val = self.grid[position]
+        if cell_val == 0 or cell_val == "":
+            img = "cell_uncovered"
+        elif cell_val == "mine":
+            img = "cell_mine"
+        else:
+            img = "cell_" + str(cell_val)
+        
+        # if clicked, highlight cells around it
+        check_mouse = self.check_mouse(x, y, cell_size_in_pixels, cell_size_in_pixels)
+        if check_mouse == "clicking":
+            self.cells_highlighted = self.assign_numbers(position)
+        
+        return img
+
+    # "for non-uncover clicks:"
+    def rg__not_uc(self, attributes):
+        position = attributes[0]
+        check_mouse = attributes[1]
+        
+        # mark click:
+        if check_mouse == "mark":
+            if self.uncovered[position] == "marked":
+                self.uncovered[position] = 0
+            elif self.uncovered[position] == 0:
+                self.uncovered[position] = "marked"
+            
+        # left-click held:
+        if check_mouse == "clicking":
+            img = "cell_hidden_clicked"
+            self.cells_highlighted = []
+                                
+        # no click:
+        else:
+            if self.uncovered[position] == "marked":
+                img = "cell_marked"
+            else:
+                if position in self.cells_highlighted:
+                    img = "cell_hidden_clicked"
+                else:
+                    img = "cell_hidden"
+        return img
+
+    def run_grid(self, attributes):
+        # attributes: [0] - render only? // [1] - grid // [2] - grid_width // [3] - uncovered // [4] - grid_xoffs // [5] grid_yoffs
+
         # initialize grid info
         cell_sprite_factor = 4
         cell_size_in_pixels = int(round(self.sprites["cell_1"].get_width()*cell_sprite_factor))
-        grid_xoffs = (self.SCREEN_WIDTH-self.grid_width*cell_size_in_pixels)/2
-        grid_yoffs = (self.SCREEN_HEIGHT-self.grid_height*cell_size_in_pixels)/2
+        # grid_xoffs = (self.SCREEN_WIDTH-self.grid_width*cell_size_in_pixels)/2
+        # grid_yoffs = (self.SCREEN_HEIGHT-self.grid_height*cell_size_in_pixels)/2
+        grid_xoffs = attributes[4]
+        grid_yoffs = attributes[5]
 
         # run and render cells
         for i in range (0, self.grid_height):
@@ -165,19 +168,7 @@ class Game:
 
                 # if cell uncovered:
                 if self.uncovered[position] == 1:
-                    # assign image based on cell value
-                    cell_val = self.grid[position]
-                    if cell_val == 0 or cell_val == "":
-                        img = "cell_uncovered"
-                    elif cell_val == "mine":
-                        img = "cell_mine"
-                    else:
-                        img = "cell_" + str(cell_val)
-                    
-                    # if clicked, highlight cells around it
-                    check_mouse = self.check_mouse(x, y, cell_size_in_pixels, cell_size_in_pixels)
-                    if check_mouse == "clicking":
-                        self.cells_highlighted = self.assign_numbers(position)
+                    img = self.rg__cell_uncovered([position, x, y, cell_size_in_pixels, cell_size_in_pixels])
 
                 # if cell covered:
                 else:
@@ -185,59 +176,22 @@ class Game:
 
                     # if clicked:
                     if check_mouse == "clicked":
-                        img = "cell_hidden_clicked"
-                        self.uncovered[position] = 1
-                        # if this is the first uncovering:
-                        if self.initialized_game == 0:
-                            self.initialized_game = 1
-                            self.spared_initial_cells = [position]
-                            self.quit = 1
-                        # if this is not the first uncovering
-                        else:
-                            if self.grid[position] == "":
-                                self.uncover_blanks_in_vicinity(position)
-                            elif self.grid[position] != "mine":
-                                self.uncover_blanks_in_vicinity(position, "only_check_for_blanks")
-                            else:
-                                # if mine clicked, uncover every mine
-                                for mine in self.mine_pos:
-                                    self.uncovered[mine] = 1
+                        img = self.rg__cell_covered_clicked([position])
 
                     # if not uncover-click:
                     else:
-                        # mark click:
-                        if check_mouse == "mark":
-                            if self.uncovered[position] == "marked":
-                                self.uncovered[position] = 0
-                            elif self.uncovered[position] == 0:
-                                self.uncovered[position] = "marked"
-                            
-                        # left-click held:
-                        if check_mouse == "clicking":
-                            img = "cell_hidden_clicked"
-                            self.cells_highlighted = []
-                        
-                        # no click:
-                        else:
-                            if self.uncovered[position] == "marked":
-                                img = "cell_marked"
-                            else:
-                                if position in self.cells_highlighted:
-                                    img = "cell_hidden_clicked"
-                                else:
-                                    img = "cell_hidden"
+                        img = self.rg__not_uc([position, check_mouse])
 
 
                 self.screen.blit(pygame.transform.scale_by(self.sprites[img], cell_sprite_factor), (x, y))
                 check_mouse = self.check_mouse(x, y, cell_size_in_pixels, cell_size_in_pixels)
-
 
     def game_run(self):
         while self.run:
 
             # reset grid (after initial click)
             if self.quit == 1:
-                self.make_grid(1)
+                self.player[0].make_grid(1, self.spared_initial_cells)
                 self.quit = 0
             elif self.quit == 2:
                 self.make_grid(0)
@@ -253,7 +207,7 @@ class Game:
             self.mouse_pos = pygame.mouse.get_pos()
 
             self.screen.fill((255,255,255))
-            self.player.main()                
+            # self.player.main()                
 
             # reset highlighted cells if no left click
             if self.mouse_c[0] == False:
@@ -262,11 +216,14 @@ class Game:
             if self.key[pygame.K_SPACE] == True:
                 self.quit = 2
 
-            self.run_grid()
+            self.run_grid_attributes(["run", self.player[0].grid, self.player[0].grid_width, self.player[0].uncovered,(self.SCREEN_WIDTH/2-self.player[0].grid_width*16*4)/2, (self.SCREEN_HEIGHT-self.player[0].grid_height*16*4)/2])
+            self.run_grid_attributes(["render-only", self.grid, self.grid_width, self.uncovered,(self.SCREEN_WIDTH/2-self.grid_width*16*4)/2, (self.SCREEN_HEIGHT-self.grid_height*16*4)/2])
+
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.run = False
             pygame.display.update()
+
 
 Game().game_run()
