@@ -98,8 +98,8 @@ class Game:
     def rg__cell_covered_clicked(self, attributes):
         position = attributes[0]
 
-        img = "cell_hidden_clicked"
         if attributes[1] == "run":
+            img = "cell_hidden_clicked"
             self.uncovered[position] = 1
             # if this is the first uncovering:
             if self.initialized_game == 0:
@@ -115,6 +115,8 @@ class Game:
                 else:
                     # if mine clicked, uncover every mine
                     self.player[0].lose_uncover_mines()
+        else:
+            img = "cell_hidden"
                     
         return img
 
@@ -156,9 +158,11 @@ class Game:
 
         # left-click held:
         if check_mouse == "clicking":
-            img = "cell_hidden_clicked"
             if type == "run":
+                img = "cell_hidden_clicked"
                 self.cells_highlighted = [position]
+            else:
+                img = "cell_hidden"
                                 
         # no click:
         else:
@@ -175,7 +179,7 @@ class Game:
         # attributes: [0] - render only? // [1] - grid // [2] - grid_width // [3] - uncovered // [4] - grid_xoffs // [5] grid_yoffs
 
         # initialize grid info
-        cell_sprite_factor = 4
+        cell_sprite_factor = attributes[6]
         cell_size_in_pixels = int(round(self.sprites["cell_1"].get_width()*cell_sprite_factor))
         # grid_xoffs = (self.SCREEN_WIDTH-self.grid_width*cell_size_in_pixels)/2
         # grid_yoffs = (self.SCREEN_HEIGHT-self.grid_height*cell_size_in_pixels)/2
@@ -244,10 +248,10 @@ class Game:
             if self.key[pygame.K_SPACE] == True:
                 self.quit = 2
 
-            self.run_grid_attributes(["run", self.player[0].grid, self.player[0].grid_width, self.player[0].uncovered,(self.SCREEN_WIDTH/2-self.player[0].grid_width*16*4)/2, (self.SCREEN_HEIGHT-self.player[0].grid_height*16*4)/2])
-            self.run_grid_attributes(["render-only", self.grid, self.grid_width, self.uncovered,(self.SCREEN_WIDTH/0.75-self.grid_width*16*4)/2, (self.SCREEN_HEIGHT-self.grid_height*16*4)/2])
+            self.run_grid_attributes(["run", self.player[0].grid, self.player[0].grid_width, self.player[0].uncovered,(self.SCREEN_WIDTH/2-self.player[0].grid_width*16*4)/2, (self.SCREEN_HEIGHT-self.player[0].grid_height*16*4)/2, 4])
+            self.run_grid_attributes(["render-only", self.grid, self.grid_width, self.uncovered,(self.SCREEN_WIDTH/0.75-self.grid_width*16*4)/2, (self.SCREEN_HEIGHT-self.grid_height*16*4)/2, 6])
             self.grid = self.player[0].grid
-            print(self.uncovered)
+            print(self.cells_highlighted)
             self.uncovered = self.player[0].uncovered
 
             for event in pygame.event.get():
