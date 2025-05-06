@@ -18,7 +18,19 @@ class Player(pygame.sprite.Sprite):
             self.grid_height = 6
             self.mine_n = 10
             self.spared_initial_cells = []
+            self.mine_pos = []
             self.make_grid(0, [])
+
+    def rg__not_uc__mark(self, n):
+        if self.uncovered[n] == "marked":
+            self.uncovered[n] = 0
+        elif self.uncovered[n] == 0:
+            self.uncovered[n] = "marked"
+
+
+    def lose_uncover_mines(self):
+        for mine in self.mine_pos:
+            self.uncovered[mine] = 1
 
     def uncover_blanks_in_vicinity(self, n, condition=None):
         positions_to_uncover = self.assign_numbers(n)
