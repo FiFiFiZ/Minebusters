@@ -12,7 +12,8 @@ class Assets:
             ("cell_mine", ""),
             ("cell_uncovered", ""),
             ("cell_marked", ""),
-            ("cell_highlighted_", "add_n", 8)
+            ("cell_highlighted_", "add_n", 8),
+            ("pawn", "")
         ]  # names with special second (or more) item get special treatment in loading (like loading both 0 and 1 name-ending variants)
 
         for i in range (len(to_load)):

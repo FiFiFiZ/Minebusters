@@ -18,11 +18,13 @@ class Game:
 
         self.players = [
             ["main", ""],
-            ["pawn", "position"]
+            ["pawn", 5]
         ] # add special attributes if needed
         self.player = []
         self.spawn_all_players()
         
+        self.to_render = []
+
         self.uncovered = self.player[0].uncovered
         self.grid = self.player[0].grid
         self.grid_width = self.player[0].grid_width
@@ -43,13 +45,19 @@ class Game:
         self.fps_cap = pygame.display.get_current_refresh_rate()
         # player attributes (this is a manually-set list, will be turned into a method of its own)
 
-    def spawn_all_players(self):
-        # for item in self.players:
-        #     if item[1] == "position":
-        #         item = 
+    def render_player(self, attributes, position_grid, cell_sprite_factor):
+        if attributes != None:
+            texture = self.sprites[attributes[0]]
+            self.screen.blit(pygame.transform.scale_by(texture, cell_sprite_factor), position_grid)
+            
 
+    def spawn_all_players(self):
+        idx = 0
+        # create player for every player data in list
         for item in self.players:
-            self.player.append(Player(item))
+            # every player has data and id
+            self.player.append(Player(item, idx))
+            idx += 1
 
     def assign_numbers(self, n):
         w = self.grid_width
@@ -186,6 +194,7 @@ class Game:
         grid_xoffs = attributes[4]
         grid_yoffs = attributes[5]
         type = attributes[0]
+        player_type = attributes[7]
 
         # run and render cells
         for i in range (0, self.grid_height):
@@ -218,6 +227,13 @@ class Game:
                 self.screen.blit(pygame.transform.scale_by(self.sprites[img], cell_sprite_factor), (x, y))
                 check_mouse = self.check_mouse(x, y, cell_size_in_pixels, cell_size_in_pixels)
 
+                if position in self.to_render:
+                    list_index = self.to_render.index(position) + 1
+                    self.render_player(self.to_render[list_index], (x, y), cell_sprite_factor)
+                    self.to_render.pop(list_index-1)
+                    self.to_render.pop(list_index-1)
+                    	
+
     def game_run(self):
         while self.run:
 
@@ -247,9 +263,21 @@ class Game:
 
             if self.key[pygame.K_SPACE] == True:
                 self.quit = 2
+           
+            for items in self.player: 
+                # run every player at the end of turn
+                if self.key[pygame.K_j] == True:
+                    returned = items.turn_command([[self.player[0].grid, self.player[0].grid_width, self.player[0].uncovered, 0, 0, self.player[0].grid_width, self.player[0].grid_width]])
 
-            self.run_grid_attributes(["run", self.player[0].grid, self.player[0].grid_width, self.player[0].uncovered,(self.SCREEN_WIDTH/2-self.player[0].grid_width*16*4)/2, (self.SCREEN_HEIGHT-self.player[0].grid_height*16*4)/2, 4])
-            self.run_grid_attributes(["render-only", self.grid, self.grid_width, self.uncovered,(self.SCREEN_WIDTH/0.75-self.grid_width*16*4)/2, (self.SCREEN_HEIGHT-self.grid_height*16*4)/2, 6])
+                # add player to render list
+                render_returned = items.render_attributes()
+                if render_returned != None:
+                    # add position so that you can look up position later
+                    self.to_render.append(render_returned[1])
+                self.to_render.append(render_returned)
+
+            self.run_grid_attributes(["run", self.player[0].grid, self.player[0].grid_width, self.player[0].uncovered,(self.SCREEN_WIDTH/2-self.player[0].grid_width*16*4)/2, (self.SCREEN_HEIGHT-self.player[0].grid_height*16*4)/2, 4, None])
+            self.run_grid_attributes(["render-only", self.grid, self.grid_width, self.uncovered,(self.SCREEN_WIDTH/0.75-self.grid_width*16*4)/2, (self.SCREEN_HEIGHT-self.grid_height*16*4)/2, 6, "id"])
             self.grid = self.player[0].grid
             print(self.cells_highlighted)
             self.uncovered = self.player[0].uncovered
@@ -290,3 +318,5 @@ Game().game_run()
 
 
 # move grid management code to player for main grid and smaller grids alike, this way we can get to making player properties and drawing boards
+
+# draw different boards corresponding to different extracted grids, then make player properties
