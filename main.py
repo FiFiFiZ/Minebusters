@@ -18,12 +18,14 @@ class Game:
 
         self.players = [
             ["main", ""],
-            ["pawn", 5]
+            ["pawn", 3  ]
         ] # add special attributes if needed
         self.player = []
         self.spawn_all_players()
         
         self.to_render = []
+
+        self.indicator = 0
 
         self.uncovered = self.player[0].uncovered
         self.grid = self.player[0].grid
@@ -203,8 +205,8 @@ class Game:
 
                 x = grid_xoffs
                 y = grid_yoffs
-                x += i*cell_size_in_pixels
-                y += n*cell_size_in_pixels
+                x += n*cell_size_in_pixels
+                y += i*cell_size_in_pixels
 
                 # if cell uncovered:
                 if self.uncovered[position] == 1:
@@ -279,8 +281,11 @@ class Game:
             self.run_grid_attributes(["run", self.player[0].grid, self.player[0].grid_width, self.player[0].uncovered,(self.SCREEN_WIDTH/2-self.player[0].grid_width*16*4)/2, (self.SCREEN_HEIGHT-self.player[0].grid_height*16*4)/2, 4, None])
             self.run_grid_attributes(["render-only", self.grid, self.grid_width, self.uncovered,(self.SCREEN_WIDTH/0.75-self.grid_width*16*4)/2, (self.SCREEN_HEIGHT-self.grid_height*16*4)/2, 6, "id"])
             self.grid = self.player[0].grid
-            print(self.cells_highlighted)
+            # print(self.cells_highlighted)
             self.uncovered = self.player[0].uncovered
+
+            if self.key[pygame.K_m] == True:
+                self.indicator = (self.indicator + 1) % 36
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:

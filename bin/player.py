@@ -35,7 +35,7 @@ class Player(pygame.sprite.Sprite):
 
     def check_collision(self, attributes):
         collision_type = attributes[0]
-        
+
         # plus collision
         if collision_type == "plus":
             collided = 0
@@ -43,20 +43,21 @@ class Player(pygame.sprite.Sprite):
             dist_to_move = attributes[2]
 
             if dir == 0: # down
-                if self.pos + self.grid_width*dist_to_move > len(self.grid):
+                if self.pos + self.grid_width*dist_to_move > len(self.grid)-1:
                     collided = 1
-            elif dir == 2:
+            elif dir == 2: # up
                 if self.pos - self.grid_width*dist_to_move < 0:
                     collided = 1
-            elif dir == 1:
+            elif dir == 1: # left
                 if floor(self.pos/self.grid_width) != floor((self.pos - dist_to_move)/self.grid_width):
                     collided = 1
-            elif dir == 3:
+            elif dir == 3: # right
                 if floor(self.pos/self.grid_width) != floor((self.pos + dist_to_move)/self.grid_width):
                     collided = 1
             
             if collided == 1:
-                dir = (dir + 1)%4
+                print(dir, self.pos + self.grid_width*dist_to_move)
+                dir = randint(0,3)
             
             return collided, dir
         
@@ -66,12 +67,14 @@ class Player(pygame.sprite.Sprite):
         # move in a plus pattern (vertical or horizontal)
         if attributes[0] == "plus":
             # find a valid dir to go in (where you don't collide)
-
-            dir = randint(0,3)
+            dir = attributes[2]
+            if dir == "random":
+                dir = randint(0,3)
             dist_to_move = attributes[1]
 
             idx = 0
             collided = 1
+            print(self.grid, self.grid_width, self.grid_height, self.pos)
             while collided == 1:
                 collided, dir = self.check_collision(["plus", dir, dist_to_move])
                 if collided == 1 and idx == 3:
@@ -84,10 +87,10 @@ class Player(pygame.sprite.Sprite):
 
             # horizontal
             if dir % 2 == 1:
-                self.pos += 1-(dir==1)*2
+                self.pos += (1-(dir==1)*2) * dist_to_move
             # vertical
             else:
-                self.pos += 1-(dir==2)*self.grid_width
+                self.pos += (1-(dir==2)*2) * dist_to_move * self.grid_width
 
     def turn_command(self, attributes=None):
         if self.type == "main":
@@ -105,7 +108,7 @@ class Player(pygame.sprite.Sprite):
 
             # if move normally
             else:
-                self.move(["plus", 1])
+                self.move(["plus", 3, "random"])
             
             # render pawn
             self.render_data = ["pawn", self.pos]
@@ -245,12 +248,12 @@ class Player(pygame.sprite.Sprite):
         # exit()
 
         self.grid_width = grid_width
-        self.grid_height = len(grid)/grid_width
+        self.grid_height = round(len(grid)/grid_width)
 
         extracted_grid = []
         extracted_uncovered = []
-        for i in range(yw-1):
-            for n in range(xw-1):
+        for i in range(yw):
+            for n in range(xw):
                 pos = x+n+(y+i)*grid_width
                 extracted_grid.append(grid[pos])
                 extracted_uncovered.append(uncovered[pos])
